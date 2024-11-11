@@ -21,6 +21,17 @@ db = mario.parse_from_txt(
 )
 
 #%%
+# act = 'Manufacture of motor vehicles, trailers and semi-trailers (34)'
+# s = db.s.loc[(slice(None),'Activity',act),:]
+# s = s.stack([0,1,2])
+# s = s.to_frame()
+
+# s.columns = ['Value']
+
+# s = s[s['Value'] != 0]
+
+
+#%%
 # db.get_add_sectors_excel(master_file_path)
 
 #%%
@@ -62,6 +73,8 @@ f.set_index(['Region','Commodity'],inplace=True)
 f = f.unstack()
 f = f.droplevel(0,axis=1)
 f = f*1000/80 # convert to kg CO2-eq/kWh
+f.loc[:,'Electric vehicles'] = f.loc[:,'Electric vehicles']*80/1000
+
 f.to_excel('footprints.xlsx')
 
 #%% Calculate prices
@@ -86,6 +99,7 @@ p = p*1e6/80 # convert to €/kWh
 p = p/0.92 # convert from EUR to USD in 2011
 p = p*1.33 # deflat from 2011 to 2024
 
+p.loc[:,'Electric vehicles'] = p.loc[:,'Electric vehicles']*80/1e6*0.92
 p.to_excel('prices.xlsx')
 
 # %% Export aggregated database to txt
