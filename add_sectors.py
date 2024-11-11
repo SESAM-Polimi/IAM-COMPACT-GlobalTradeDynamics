@@ -2,6 +2,8 @@
 import mario
 import yaml
 import os
+import numpy as np
+import pandas as pd
 
 user = 'LRinaldi'
 
@@ -31,7 +33,6 @@ db.read_add_sectors_excel(master_file_path,read_inventories=True)
 db.add_sectors()
 
 #%% Calculate GHG footprints
-
 # provide a dictionary with GHGs and their GWP
 ghgs = {
     'Carbon dioxide, fossil (air - Emiss)':1,
@@ -39,8 +40,15 @@ ghgs = {
     'N2O (air - Emiss)':273
     }
 
+# calculate f using "blocks-calculations"
+# w_pp = (I - u s)^-1
+# f = e s w_pp
+
+f = db.e.loc[:,(slice(None),'Activity',slice(None))].values @ db.s.values @ np.linalg.inv((np.eye(db.u.shape[0]) - db.u.values @ db.s.values))
+f = pd.DataFrame(f, index = db.e.index, columns = db.s.columns)
+
 # isolate GHGs for new commodities (batteries) in f matrix (specific footprints)
-f = db.f.loc[ghgs.keys(),(slice(None),'Commodity',db.new_commodities)]
+f = f.loc[ghgs.keys(),(slice(None),'Commodity',db.new_commodities)]
 for ghg,gwp in ghgs.items():
     f.loc[ghg,:] *= gwp # multiply each GHG by its GWP
 
@@ -56,9 +64,20 @@ f = f.droplevel(0,axis=1)
 f = f*1000/80 # convert to kg CO2-eq/kWh
 f.to_excel('footprints.xlsx')
 
-#%%
-# isolate prices for new commodities (batteries) in f matrix (specific footprints)
-p = db.p.loc[(slice(None),'Commodity',db.new_commodities),:]
+#%% Calculate prices
+
+# calculate p using "blocks-calculations"
+# w_pp = (I - u s)^-1
+# p = v s w_pp
+
+p = db.v.loc[:,(slice(None),'Activity',slice(None))].values @ db.s.values @ np.linalg.inv((np.eye(db.u.shape[0]) - db.u.values @ db.s.values))
+p = pd.DataFrame(p, index = db.v.index, columns = db.s.columns)
+p = p.sum(0)
+p = p.to_frame()
+p.columns = ['price']
+
+# isolate prices for new commodities (batteries) in f matrix
+p = p.loc[(slice(None),'Commodity',db.new_commodities),:]
 p = p.unstack(-1)
 p = p.droplevel(1,axis=0)
 p = p.droplevel(0,axis=1)
@@ -75,36 +94,5 @@ db.to_txt(
     flows=False,
     coefficients=True
     )
-
-# %%
-f
-
-
-# %%
-import pandas as pd
-import numpy as np
-
-ghgs = {
-    'Carbon dioxide, fossil (air - Emiss)':1,
-    'CH4 (air - Emiss)':29.8,
-    'N2O (air - Emiss)':273
-    }
-
-e = db.e.loc[ghgs.keys(),:]
-for ghg,gwp in ghgs.items():
-    e.loc[ghg,:] *= gwp
-
-e = e.sum(0).to_frame().T
-e.index = ['GHGs']
-
-f_exp = pd.DataFrame(
-    np.diagflat(e.values) @ db.w.values,
-    index = e.columns,
-    columns = e.columns
-)
-
-#%%
-f_exp_lfp = f_exp.loc[(slice(None),'Activity',slice(None)),('CN','Commodity','LFP batteries')]
-f_exp_lfp.to_clipboard()
 
 # %%

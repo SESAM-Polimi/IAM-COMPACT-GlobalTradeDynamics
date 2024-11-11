@@ -7,7 +7,7 @@ database:
   exiobase:
     raw: 'database/Exiobase Hybrid 3.3.18 with VA'
     aggregated: 'database/aggregated'
-    extended: 'database/extended_chenery'
+    extended: 'database/extended'
   ember: 'database/ember/yearly_full_release_long_format.csv'
 
 inventories: inventories/master_simplified.xlsx
