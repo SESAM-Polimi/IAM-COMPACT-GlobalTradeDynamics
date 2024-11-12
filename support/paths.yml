@@ -11,3 +11,6 @@ database:
   ember: 'database/ember/yearly_full_release_long_format.csv'
 
 inventories: inventories/master_simplified.xlsx
+
+scenarios:
+  import_shares: scenarios/import_shares.xlsx
