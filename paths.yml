@@ -4,10 +4,15 @@ database:
 
 mario_templates:
   aggregations: 
-    raw_to_baseline: inputs/aggregations/raw_to_baseline.xlsx
+    raw_to_ember: inputs/aggregations/raw_to_ember.xlsx
+    ember_to_baseline: inputs/aggregations/ember_to_baseline.xlsx
 
 data: 
   ember: inputs/ember/yearly_full_release_long_format.csv
   inventories: inputs/inventories/master.xlsx
   import_shares: inputs/scenarios/import_shares.xlsx
-  
+  market_shares: inputs/scenarios/market_shares.xlsx
+
+results:
+  prices: results/prices.xlsx
+  ghg_footprints: results/ghg_footprints.xlsx

@@ -6,7 +6,62 @@ from copy import deepcopy as dc
 
 EU_countries = ['AT','BE','BG','CY','CZ','DE','DK','EE','ES','FI','FR','GR','HR','HU','IE','IT','LT','LU','LV','MT','NL','PL','PT','RO','SE','SI','SK']
 
-#%%
+#%% market shares
+def market_shares(
+        db: mario.Database,
+        path: str,
+        commodity: str,
+        scenario: str = 'baseline',
+):
+    
+    market_shares = pd.read_excel(
+        path,
+        sheet_name=None,
+        index_col=None
+    )
+
+    del market_shares['Reference']
+
+    regions_clusters = {}
+    for cluster in market_shares['Regions Clusters'].columns:
+        regions_clusters[cluster] = market_shares['Regions Clusters'][cluster].dropna().values
+
+    del market_shares['Regions Clusters']
+
+    for k,v in market_shares.items():
+        v.columns = ['Scenario','Region']+list(v.columns[2:])
+        v = v.set_index(['Scenario','Region'])
+        v.columns.names = [MI['a']]
+        v = v.stack().to_frame()
+        v.columns = ['Value']
+        market_shares[k] = v
+
+    market_shares = market_shares[commodity]
+
+    z = db.z
+    s = db.s
+
+    for region in market_shares.index.get_level_values(1):
+        
+        if region in regions_clusters:
+            reg_list = regions_clusters[region]
+            reg_cluster = dc(region)
+        else:
+            reg_list = [region]
+            reg_cluster = dc(region)
+
+        for reg in reg_list:
+            new_mix = market_shares.loc[(scenario,reg_cluster,slice(None)),['Value']].sort_index(axis=0)
+            activities = new_mix.index.get_level_values(2)
+            s.loc[(reg,MI['a'],activities),(reg,MI['c'],commodity)] = new_mix.values
+            
+    z.update(s)
+    db.update_scenarios(scenario,z=z)
+    db.reset_to_coefficients(scenario)
+
+    return db
+
+
 def electricity_mixes(
         db: mario.Database,
         ee_mix: pd.DataFrame,
@@ -148,8 +203,8 @@ def get_import_shares(
 def import_coefficients(
         db: mario.Database,
         import_shares: dict,
-        commodities_clusters: dict,
         regions_clusters: dict,
+        commodities_clusters: dict,
         scenario: str = 'baseline',
 ):
 
