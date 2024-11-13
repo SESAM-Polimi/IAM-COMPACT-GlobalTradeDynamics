@@ -1,0 +1,13 @@
+database:
+  exiobase: /Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/Exiobase Hybrid 3.3.18 with VA
+  baseline: /Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/Gabriele Casella - Lorenzo_ROSSI/model/database/baseline
+
+mario_templates:
+  aggregations: 
+    raw_to_baseline: inputs/aggregations/raw_to_baseline.xlsx
+
+data: 
+  ember: inputs/ember/yearly_full_release_long_format.csv
+  inventories: inputs/inventories/master.xlsx
+  import_shares: inputs/scenarios/import_shares.xlsx
+  
